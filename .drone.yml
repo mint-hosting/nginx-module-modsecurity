@@ -102,10 +102,10 @@ steps:
   - name: Notifications
     image: plugins/slack
     settings:
-      webhook: "$${SLACK_WEBHOOK_URL}"
-      channel: "$${SLACK_CHANNEL}"
+      webhook: "${SLACK_WEBHOOK_URL}"
+      channel: "${SLACK_CHANNEL}"
       icon_url: https://synth.agency/wp-content/uploads/2016/11/Android-Studio.png
-      username: "$${SLACK_USERNAME}"
+      username: "${SLACK_USERNAME}"
       template: >
         {{#success build.status}}
           {{ repo.name }} build {{ build.number }} (tagged as {{ build.tag }}) succeeded! Good job {{ build.author }}!
