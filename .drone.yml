@@ -1,0 +1,110 @@
+---
+kind: pipeline
+name: build-and-release
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  depth: 10
+
+steps:
+  - name: Check if pipeline should execute
+    image: alpine
+    pull: always
+    environment:
+      nginx_git_tags_uri: https://api.github.com/repos/nginx/nginx/tags
+      modsecurity_mint_git_tags_uri: https://api.github.com/repos/mint-hosting/nginx-module-modsecurity/tags
+    commands:
+      - apk update && apk add jq curl
+      - nginx_release_version=$(curl -s $${nginx_git_tags_uri} | jq -r '.[0].name' | cut -d"-" -f2)
+      - node=$(curl -s $${modsecurity_mint_git_tags_uri} | jq --arg NGINXVERSION "$nginx_release_version" '.[] | select(.name==$NGINXVERSION) | .node_id')
+      - echo $nginx_release_version
+      - echo $node
+      - if [[ "$node" != "" ]] ; then exit 1 ; fi
+
+  - name: Install dependencies and build the modsec
+    image: ubuntu:19.04
+    pull: always
+    environment:
+      GITHUB_SSH_KEY: 
+        from_secret: ssh_key_public
+      GITHUB_EMAIL:
+        from_secret: github_email
+      GITHUB_USERNAME:
+        from_secret: github_username
+      nginx_git_tags_uri: https://api.github.com/repos/nginx/nginx/tags
+      modsecurity_git_clone_path: /opt/ModSecurity
+      modsecurity_git_nginx_clone_path: /opt/ModSecurityNginx
+      modsecurity_git_repo_uri: https://github.com/SpiderLabs/ModSecurity
+      modsecurity_mint_git_tags_uri: https://api.github.com/repos/mint-hosting/nginx-module-modsecurity/tags
+      modsecurity_mint_module_git_repo_uri: git@github.com:mint-hosting/nginx-module-modsecurity.git
+      modsecurity_mint_module_git_repo_path: /opt/build
+    commands:
+      # Install dependencies
+      - apt update
+      - apt install -y jq git curl gnupg2 ca-certificates apt-utils autoconf automake build-essential git libcurl4-openssl-dev libgeoip-dev liblmdb-dev libpcre++-dev libtool libxml2-dev libyajl-dev pkgconf wget zlib1g-dev
+   
+      # Configure SSH and add deploy key
+      - mkdir -p /root/.ssh && chmod 666 /root/.ssh
+      - echo "    IdentityFile ~/.ssh/id_rsa" >> /etc/ssh/ssh_config
+      - eval "$(ssh-agent -s)"
+      - echo "Host github.com\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config
+      - echo "$${GITHUB_SSH_KEY}" | tr -d '\r' | ssh-add - > /dev/null
+
+      # Set nginx variables - latest version and the source download url
+      - nginx_download_uri=$(curl -s $${nginx_git_tags_uri} | jq -r '.[0].tarball_url')
+      - nginx_release_version=$(curl -s $${nginx_git_tags_uri} | jq -r '.[0].name' | cut -d"-" -f2)
+      - echo $nginx_release_version
+      - echo $nginx_download_uri
+    
+      # Clone ModSecurity and build the module
+      - git clone --single-branch --branch v3/master $${modsecurity_git_repo_uri} $${modsecurity_git_clone_path}
+      - (cd $${modsecurity_git_clone_path} && git submodule init)
+      - (cd $${modsecurity_git_clone_path} && git submodule update)
+      - (cd $${modsecurity_git_clone_path} && ./build.sh)
+      - (cd $${modsecurity_git_clone_path} && ./configure)
+      - (cd $${modsecurity_git_clone_path} && make)
+      - (cd $${modsecurity_git_clone_path} && make install)
+      - git clone https://github.com/SpiderLabs/ModSecurity-nginx.git $${modsecurity_git_nginx_clone_path}
+      - (cd /opt && wget https://nginx.org/download/nginx-$nginx_release_version.tar.gz)
+      - (cd /opt && tar xzvf nginx-$nginx_release_version.tar.gz)
+      - (cd /opt/nginx-$nginx_release_version && ./configure --with-compat --add-dynamic-module=$${modsecurity_git_nginx_clone_path})
+      - (cd /opt/nginx-$nginx_release_version && make modules) 
+      - (cd /opt/nginx-$nginx_release_version && make install) 
+    
+      # Create local git repo, tag the release and push it to the git
+      - mkdir -p $${modsecurity_mint_module_git_repo_path}
+      - (cd $${modsecurity_mint_module_git_repo_path} && git init)
+      - (cd $${modsecurity_mint_module_git_repo_path} && git config --global user.email "$${GITHUB_EMAIL}" && git config --global user.name "$${GITHUB_USERNAME}")
+      - (cd $${modsecurity_mint_module_git_repo_path} && git remote add origin $${modsecurity_mint_module_git_repo_uri})
+      - (cd $${modsecurity_mint_module_git_repo_path} && git pull origin master)
+   
+      # Copy the .so module file, creeate branch and push it to the git
+      - (cd $${modsecurity_mint_module_git_repo_path} && git checkout -b build-$nginx_release_version)
+      - cp /opt/nginx-$nginx_release_version/objs/ngx_http_modsecurity_module.so $${modsecurity_mint_module_git_repo_path}
+      - (cd $${modsecurity_mint_module_git_repo_path} && git add --all && git commit -m 'ModSecurity Module for nginx v$nginx_release_version')
+      - (cd $${modsecurity_mint_module_git_repo_path} && git push origin build-$nginx_release_version)
+  
+      # Tag the build and push it to git
+      - (cd $${modsecurity_mint_module_git_repo_path} && git tag -am "ModSecurity module built for nginx v$nginx_release_version" $nginx_release_version && git push origin $nginx_release_version)
+   
+      # Remove the remote branch
+      - (cd $${modsecurity_mint_module_git_repo_path} && git checkout master && git push origin --delete build-$nginx_release_version)  
+
+  - name: Notifications
+    image: plugins/slack
+    settings:
+      webhook: https://hooks.slack.com/services/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
+      channel: builds
+      icon_url: https://unsplash.it/256/256/?random
+      username: drone
+      template: >
+        {{#success build.status}}
+          {{ repo.name }} build {{ build.number }} (tagged as {{ build.tag }}) succeeded! Good job {{ build.author }}!
+        {{else}}
+          {{ repo.name }} build {{ build.number }} failed :( Fix this issue please! Last commit was {{ build.link }} <@channel>
+        {{/success}}
+    when:
+      status: [ success, failure ]
