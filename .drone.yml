@@ -107,7 +107,7 @@ steps:
         {{#success build.status}}
           {{ repo.name }} build {{ build.number }} (tagged as {{ build.tag }}) succeeded!
         {{else}}
-          {{ repo.name }} build {{ build.number }} failed or that version already exist Last commit was {{ build.link }}
+          {{ repo.name }} build {{ build.number }} didn't run. Possible reasons: build failed or module is alrerady compiled for this version of Nginx. Last commit was {{ build.link }}
         {{/success}}
     when:
       status: [ success, failure ]
