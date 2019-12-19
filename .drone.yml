@@ -34,12 +34,6 @@ steps:
         from_secret: github_email
       GITHUB_USERNAME:
         from_secret: github_username
-      SLACK_WEBHOOK_URL: 
-        from_secret: slack_webhook_url
-      SLACK_USERNAME:
-        from_secret: slack_username
-      SLACK_CHANNEL:
-        from_secret: slack_username
       nginx_git_tags_uri: https://api.github.com/repos/nginx/nginx/tags
       modsecurity_git_clone_path: /opt/ModSecurity
       modsecurity_git_nginx_clone_path: /opt/ModSecurityNginx
@@ -101,6 +95,13 @@ steps:
 
   - name: Notifications
     image: plugins/slack
+    environment:
+      SLACK_WEBHOOK_URL: 
+        from_secret: slack_webhook_url
+      SLACK_USERNAME:
+        from_secret: slack_username
+      SLACK_CHANNEL:
+        from_secret: slack_username
     settings:
       webhook: "${SLACK_WEBHOOK_URL}"
       channel: "${SLACK_CHANNEL}"
@@ -108,9 +109,9 @@ steps:
       username: "${SLACK_USERNAME}"
       template: >
         {{#success build.status}}
-          {{ repo.name }} build {{ build.number }} (tagged as {{ build.tag }}) succeeded! Good job {{ build.author }}!
+          {{ repo.name }} build {{ build.number }} (tagged as {{ build.tag }}) succeeded!
         {{else}}
-          {{ repo.name }} build {{ build.number }} failed :( Fix this issue please! Last commit was {{ build.link }} <@channel>
+          {{ repo.name }} build {{ build.number }} failed or that version already exist Last commit was {{ build.link }}
         {{/success}}
     when:
       status: [ success, failure ]
