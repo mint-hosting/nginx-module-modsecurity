@@ -20,8 +20,6 @@ steps:
       - apk update && apk add jq curl
       - nginx_release_version=$(curl -s $${nginx_git_tags_uri} | jq -r '.[0].name' | cut -d"-" -f2)
       - node=$(curl -s $${modsecurity_mint_git_tags_uri} | jq --arg NGINXVERSION "$nginx_release_version" '.[] | select(.name==$NGINXVERSION) | .node_id')
-      - echo $nginx_release_version
-      - echo $node
       - if [[ "$node" != "" ]] ; then exit 1 ; fi
 
   - name: Install dependencies and build the modsec
@@ -92,6 +90,9 @@ steps:
    
       # Remove the remote branch
       - (cd $${modsecurity_mint_module_git_repo_path} && git checkout master && git push origin --delete build-$nginx_release_version)  
+
+      # All done
+      - echo "Done! Module has been successfully compiled."
 
   - name: Notifications
     image: plugins/slack
