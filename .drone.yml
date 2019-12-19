@@ -29,7 +29,7 @@ steps:
     pull: always
     environment:
       GITHUB_SSH_KEY: 
-        from_secret: ssh_key_public
+        from_secret: ssh_key
       GITHUB_EMAIL:
         from_secret: github_email
       GITHUB_USERNAME:
