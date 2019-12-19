@@ -34,6 +34,12 @@ steps:
         from_secret: github_email
       GITHUB_USERNAME:
         from_secret: github_username
+      SLACK_WEBHOOK_URL: 
+        from_secret: slack_webhook_url
+      SLACK_USERNAME:
+        from_secret: slack_username
+      SLACK_CHANNEL:
+        from_secret: slack_username
       nginx_git_tags_uri: https://api.github.com/repos/nginx/nginx/tags
       modsecurity_git_clone_path: /opt/ModSecurity
       modsecurity_git_nginx_clone_path: /opt/ModSecurityNginx
@@ -96,10 +102,10 @@ steps:
   - name: Notifications
     image: plugins/slack
     settings:
-      webhook: https://hooks.slack.com/services/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
-      channel: builds
-      icon_url: https://unsplash.it/256/256/?random
-      username: drone
+      webhook: "$${SLACK_WEBHOOK_URL}"
+      channel: "$${SLACK_CHANNEL}"
+      icon_url: https://synth.agency/wp-content/uploads/2016/11/Android-Studio.png
+      username: "$${SLACK_USERNAME}"
       template: >
         {{#success build.status}}
           {{ repo.name }} build {{ build.number }} (tagged as {{ build.tag }}) succeeded! Good job {{ build.author }}!
