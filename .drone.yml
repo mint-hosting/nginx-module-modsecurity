@@ -23,6 +23,7 @@ steps:
     commands:
       - apk update && apk add jq curl
       - nginx_release_version=$(curl -s $${nginx_git_tags_uri} | jq -r '.[0].name' | cut -d"-" -f2)
+      - echo $nginx_release_version
       - node=$(curl -s $${modsecurity_mint_git_tags_uri} | jq --arg NGINXVERSION "$nginx_release_version-debian-10" '.[] | select(.name==$NGINXVERSION) | .node_id')
       - if [[ "$node" != "" ]] ; then exit 1 ; fi
     
@@ -75,8 +76,8 @@ steps:
     image: debian:buster
     pull: always
     environment:
-      BUILD_OS_VERSION: debian-buster
-      BUILD_BASE_DIR: debianbuster
+      BUILD_OS_VERSION: debian-10
+      BUILD_BASE_DIR: debian10
       MODSECURITY_GIT_REPO_URI: https://github.com/SpiderLabs/ModSecurity
       MODSECURITY_NGINX_GIT_REPO_URI: https://github.com/SpiderLabs/ModSecurity-nginx.git
       NGINX_GIT_TAGS_URI: https://api.github.com/repos/nginx/nginx/tags
@@ -90,8 +91,8 @@ steps:
     image: debian:stretch
     pull: always
     environment:
-      BUILD_OS_VERSION: debian-stretch
-      BUILD_BASE_DIR: debianstretch
+      BUILD_OS_VERSION: debian-9
+      BUILD_BASE_DIR: debian9
       MODSECURITY_GIT_REPO_URI: https://github.com/SpiderLabs/ModSecurity
       MODSECURITY_NGINX_GIT_REPO_URI: https://github.com/SpiderLabs/ModSecurity-nginx.git
       NGINX_GIT_TAGS_URI: https://api.github.com/repos/nginx/nginx/tags
