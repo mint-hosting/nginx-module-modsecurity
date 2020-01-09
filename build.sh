@@ -6,13 +6,16 @@ NGINX_GIT_CLONE_PATH=$PWD/$BUILD_BASE_DIR/tmp/nginx
 MODSECURITY_GIT_CLONE_PATH=$PWD/$BUILD_BASE_DIR/tmp/modsecurity
 MODSECURITY_NGINX_GIT_CLONE_PATH=$PWD/$BUILD_BASE_DIR/tmp/modsecurityNginx
 
+# Instruct bash to output commands
+set -x
+
 # Install dependencies
 apt update && apt install -y jq git curl gnupg2 ca-certificates apt-utils autoconf automake build-essential git libcurl4-openssl-dev libgeoip-dev liblmdb-dev libpcre++-dev libtool libxml2-dev libyajl-dev pkgconf wget zlib1g-dev
 
 # Set nginx variables - latest version and the source download url
 nginx_download_uri=$(curl -s $NGINX_GIT_TAGS_URI | jq -r '.[0].tarball_url')
 #- NGINX_RELEASE_VERSION=$(curl -s $${NGINX_GIT_TAGS_URI} | jq -r '.[0].name' | cut -d"-" -f2)
-NGINX_RELEASE_VERSION=1.16.0
+NGINX_RELEASE_VERSION=1.16.1
 
 # Create required directories
 mkdir -p $BUILD_BASE_DIR
