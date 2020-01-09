@@ -2,6 +2,8 @@
 
 dirs=`ls -1d *`
 
+set -x
+
 for d in $dirs; do
 	if [ -d "$d" ]; then
 		(
