@@ -164,8 +164,6 @@ steps:
       template: >
         {{#success build.status}}
           {{ repo.name }} build {{ build.number }} succeeded!
-        {{else}}
-          {{ repo.name }} build {{ build.number }} has failed. Last commit was {{ build.link }}
         {{/success}}
     when:
       status: [ success, failure ]
