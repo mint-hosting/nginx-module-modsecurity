@@ -164,9 +164,11 @@ steps:
       template: >
         {{#success build.status}}
           {{ repo.name }} build {{ build.number }} succeeded!
+        {{else}}
+          {{ repo.name }} build {{ build.number }} has failed. Last commit was {{ build.link }}
         {{/success}}
     when:
-      status: [ success, failure ]
+      status: [ success ]
     depends_on:
       - Build on Debian 10
       - Build on Debian 9
