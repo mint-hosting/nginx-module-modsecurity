@@ -40,7 +40,7 @@ git clone $MODSECURITY_NGINX_GIT_REPO_URI $MODSECURITY_NGINX_GIT_CLONE_PATH
 # Copy the .so module files to dist folder
 cp $NGINX_GIT_CLONE_PATH/nginx-$NGINX_RELEASE_VERSION/objs/ngx_http_modsecurity_module.so $BUILD_DIST_DIR
 # Copy the libmodsecurity.so and libmodsecurity.so.3.0.4
-cp $MODSECURITY_GIT_CLONE_PATH/src/.libs/* $BUILD_DIST_DIR
+cp $MODSECURITY_GIT_CLONE_PATH/src/.libs/libmodsecurity.so.* $BUILD_DIST_DIR
 
 # Add additional info about nginx version and os version
 echo $NGINX_RELEASE_VERSION > $BUILD_DIST_DIR/.nginx
