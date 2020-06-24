@@ -3,9 +3,7 @@ ModSecurity module for Nginx
 
 This repository provides access to the ModSecurity dynamic module for nginx, so it can be dynamically loaded into Nginx configuration. The module is compiled on the following systems:
 - Ubuntu 18.04
-- Ubuntu 19.04
-- Ubuntu 19.10
-- Debian 9
+- Ubuntu 20.04
 - Debian 10
 
 Tags represent stable Nginx version for which module is being compiled.
