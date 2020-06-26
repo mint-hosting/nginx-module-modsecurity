@@ -1,3 +1,5 @@
+![Build ModSecurity module for Nginx](https://github.com/mint-hosting/nginx-module-modsecurity/workflows/Build%20ModSecurity%20module%20for%20Nginx/badge.svg)
+
 ModSecurity module for Nginx
 -----------------
 
