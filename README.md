@@ -15,7 +15,7 @@ Installation
 1. Download module for you version of nginx and put it into `modules` directory (uslually `/usr/lib/nginx/modules`).
 2. Put the load_module directives in the top‑level (“main”) context of nginx file, `nginx.conf`:
 ```
-load_module /usr/lib/nginx/modules/ngx_http_modsecurity_module.so;
+load_module /usr/lib/nginx/modules/ngx_http_modsecurity_module.so
 ```
 3. Copy the `libmodsecurity.so` to `/usr/local/modsecurity/lib`
 4. Deploy ModSecurity rules of your choice (OWASP, Comodo, Atimocorp)
